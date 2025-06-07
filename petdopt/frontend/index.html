@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>PetDopt – Adopcja Zwierzaków</title>
+</head>
+<body>
+  <h1>PetDopt</h1>
+
+  <section>
+    <h2>Rejestracja</h2>
+    <form id="register-form">
+      <input type="text" id="reg-username" placeholder="Nazwa użytkownika" required />
+      <input type="password" id="reg-password" placeholder="Hasło" required />
+      <button type="submit">Zarejestruj</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Logowanie</h2>
+    <form id="login-form">
+      <input type="text" id="login-username" placeholder="Nazwa użytkownika" required />
+      <input type="password" id="login-password" placeholder="Hasło" required />
+      <button type="submit">Zaloguj</button>
+    </form>
+    <button id="logout-btn" style="display:none;">Wyloguj</button>
+    <p id="auth-status"></p>
+  </section>
+
+  <hr />
+
+  <section>
+    <h2>Dodaj zwierzaka do adopcji</h2>
+    <form id="pet-form" enctype="multipart/form-data">
+      <input type="text" id="pet-name" placeholder="Imię zwierzaka" required />
+      <select id="species" required>
+        <option value="">Gatunek</option>
+        <option value="pies">Pies</option>
+        <option value="kot">Kot</option>
+        <option value="inne">Inne</option>
+      </select>
+      <input type="text" id="gender" placeholder="Płeć (samiec/samiczka)" required />
+      <input type="number" id="age" placeholder="Wiek (lata)" min="0" required />
+      <input type="text" id="location" placeholder="Lokalizacja" required />
+      <textarea id="description" placeholder="Opis zwierzaka" required></textarea>
+      
+      <label for="image-file">Zdjęcie zwierzaka</label>
+      <input type="file" id="image-file" name="image" accept="image/*" required />
+      <div id="drop-area" style="border: 2px dashed #aaa; padding: 10px; margin-top: 10px;">
+        Lub przeciągnij zdjęcie tutaj
+      </div>
+
+      <button type="submit">Dodaj ogłoszenie</button>
+    </form>
+  </section>
+
+  <hr />
+
+  <section>
+    <h2>Zwierzaki do adopcji</h2>
+    <ul id="pet-list"></ul>
+  </section>
+
+  <script>
+    let loggedUser = null;
+
+    const petAPI = 'http://localhost:5001/pets';
+    const userAPI = 'http://localhost:5002';
+    const matchAPI = 'http://localhost:5003/match';
+
+    const dropArea = document.getElementById('drop-area');
+    const imageInput = document.getElementById('image-file');
+
+    dropArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropArea.style.borderColor = '#000';
+    });
+    dropArea.addEventListener('dragleave', () => {
+      dropArea.style.borderColor = '#aaa';
+    });
+    dropArea.addEventListener('drop', e => {
+      e.preventDefault();
+      imageInput.files = e.dataTransfer.files;
+      dropArea.style.borderColor = '#aaa';
+    });
+
+
+    async function fetchPets() {
+      const res = await fetch(petAPI);
+      const pets = await res.json();
+      const list = document.getElementById('pet-list');
+      list.innerHTML = '';
+      pets.forEach(pet => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${pet.name}</strong> (${pet.species})<br/>
+          Płeć: ${pet.gender || '-'}, Wiek: ${pet.age || '-'}, Lokalizacja: ${pet.location || '-'}<br/>
+          ${pet.description || ''}<br/>
+          ${pet.image_url ? `<img src="${pet.image_url}" alt="${pet.name}" width="150">` : ''}
+        `;
+
+        if (loggedUser) {
+          const matchBtn = document.createElement('button');
+          matchBtn.textContent = "Zgłoś adopcję";
+          matchBtn.onclick = () => submitMatch(pet.name);
+          li.appendChild(matchBtn);
+
+          if (loggedUser && loggedUser === pet.username) {
+            const delBtn = document.createElement('button');
+            delBtn.textContent = "Usuń ogłoszenie";
+            delBtn.onclick = () => deletePet(pet.id);
+            li.appendChild(delBtn);
+          }
+        }
+
+        list.appendChild(li);
+      });
+    }
+
+    async function deletePet(petId) {
+      try {
+        const res = await fetch(`http://localhost:5001/pets/${petId}`, {
+          method: "DELETE",
+          headers: {
+            "X-User": loggedUser  
+          }
+        });
+        if (res.ok) {
+          alert("Usunięto ogłoszenie");
+          fetchPets();
+        } else {
+          const data = await res.json();
+          alert("Błąd: " + (data.error || "Nie udało się usunąć"));
+        }
+      } catch (err) {
+        alert("Błąd sieci: " + err.message);
+      }
+    }
+
+    async function submitMatch(petName) {
+      const res = await fetch(matchAPI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pet_name: petName, username: loggedUser })
+      });
+      if (res.ok) {
+        alert("Zgłoszenie wysłane!");
+      } else {
+        alert("Błąd zgłoszenia.");
+      }
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value;
+      const password = document.getElementById('reg-password').value;
+      const res = await fetch(`${userAPI}/register`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      alert(res.ok ? "Rejestracja udana!" : "Błąd rejestracji");
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      const res = await fetch(`${userAPI}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        loggedUser = username;
+        document.getElementById('auth-status').textContent = `👤 Zalogowano jako: ${username}`;
+        document.getElementById('logout-btn').style.display = 'inline-block';
+        fetchPets();
+      } else {
+        alert("Błąd logowania");
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      loggedUser = null;
+      document.getElementById('auth-status').textContent = '';
+      document.getElementById('logout-btn').style.display = 'none';
+      fetchPets();
+    });
+
+    document.getElementById('pet-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!loggedUser) {
+        alert("Musisz być zalogowany, aby dodać ogłoszenie.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("name", document.getElementById('pet-name').value);
+      formData.append("species", document.getElementById('species').value);
+      formData.append("gender", document.getElementById('gender').value);
+      formData.append("age", document.getElementById('age').value);
+      formData.append("location", document.getElementById('location').value);
+      formData.append("description", document.getElementById('description').value);
+      formData.append("username", loggedUser);
+      formData.append("image", document.getElementById('image-file').files[0]);
+
+      const res = await fetch("http://localhost:5001/pets", {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.ok) {
+        alert("Dodano ogłoszenie!");
+        fetchPets();
+        e.target.reset();
+      } else {
+        alert("Błąd dodawania ogłoszenia.");
+      }
+    });
+
+    fetchPets();
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+import os
+from flask import Flask, request, jsonify, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
+from flask_cors import CORS
+
+
+app = Flask(__name__)
+CORS(app, origins=["http://localhost:8080"])
+app.config["UPLOAD_FOLDER"] = "uploads"
+
+
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
+DB_HOST = os.environ.get("DB_HOST", "localhost")  
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "petdopt")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+
+db = SQLAlchemy(app)
+
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+
+class Pet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    species = db.Column(db.String(30))
+    gender = db.Column(db.String(20))
+    age = db.Column(db.Integer)
+    location = db.Column(db.String(120))
+    description = db.Column(db.Text)
+    username = db.Column(db.String(80), nullable=False)
+    image_filename = db.Column(db.String(120))
+
+@app.route("/pets", methods=["GET"])
+def list_pets():
+    pets = Pet.query.all()
+    return jsonify([
+        {   
+            "id": pet.id,
+            "name": pet.name,
+            "species": pet.species,
+            "gender": pet.gender,
+            "age": pet.age,
+            "location": pet.location,
+            "description": pet.description,
+            "username": pet.username,
+            "image_url": f"http://localhost:5001/uploads/{pet.image_filename}"
+        } for pet in pets
+    ])
+
+@app.route("/pets", methods=["POST"])
+def add_pet():
+    name = request.form["name"]
+    species = request.form["species"]
+    gender = request.form["gender"]
+    age = request.form["age"]
+    location = request.form["location"]
+    description = request.form["description"]
+    username = request.form['username'] 
+    image = request.files["image"]
+    filename = secure_filename(image.filename)
+    image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+    pet = Pet(
+        name=name,
+        species=species,
+        gender=gender,
+        age=int(age),
+        location=location,
+        description=description,
+        username=username,
+        image_filename=filename
+    )
+    db.session.add(pet)
+    db.session.commit()
+    return jsonify({"status": "ok"}), 201
+
+@app.route('/pets/<int:pet_id>', methods=['DELETE'])
+def delete_pet(pet_id):
+    pet = Pet.query.get(pet_id)
+    if not pet:
+        return jsonify({"error": "Nie znaleziono zwierzaka"}), 404
+    
+    requesting_user = request.headers.get('X-User') or request.args.get('username')
+    if not requesting_user:
+        return jsonify({"error": "Brak informacji o użytkowniku"}), 400
+    
+    if pet.username != requesting_user:
+        return jsonify({"error": "Brak uprawnień do usunięcia tego ogłoszenia"}), 403
+
+    db.session.delete(pet)
+    db.session.commit()
+    return jsonify({"message": "Usunięto ogłoszenie"})
+
+@app.route("/uploads/<filename>")
+def get_image(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+with app.app_context():
+    db.create_all()
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+    app.run(host="0.0.0.0", port=5000)
+
+

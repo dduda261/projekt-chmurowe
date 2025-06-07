@@ -1,0 +1,77 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    networks:
+      - petdopt_net
+    depends_on:
+      - pet-service
+
+  pet-service:
+    build: ./pet-service
+    ports:
+      - "5001:5000"
+    networks:
+      - petdopt_net
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=petdopt
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    volumes:
+      - pet_uploads:/app/uploads
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "5002:5000"
+    networks:
+      - petdopt_net
+
+  match-service:
+    build: ./match-service
+    ports:
+      - "5003:5000"
+    networks:
+      - petdopt_net
+
+  analytics-service:
+    build: ./analytics-service
+    networks:
+      - petdopt_net
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - petdopt_net
+
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: petdopt
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - petdopt_net
+
+networks:
+  petdopt_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  pet_uploads:
