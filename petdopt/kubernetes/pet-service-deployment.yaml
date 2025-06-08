@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pet-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pet-service
+  template:
+    metadata:
+      labels:
+        app: pet-service
+    spec:
+      containers:
+        - name: pet-service
+          image: dduda261/pet-service:latest
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "500m"
+          env:
+            - name: BASE_URL
+              value: "http://petdopt.local"
+          envFrom:
+            - configMapRef:
+                name: petdopt-config
+            - secretRef:
+                name: petdopt-secret
+          volumeMounts:
+            - mountPath: /uploads
+              name: uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pet-uploads

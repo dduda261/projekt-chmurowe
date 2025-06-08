@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image:  dduda261/frontend:env
+          env:
+          - name: PET_API
+            value: http://petdopt.local/pets
+          - name: USER_API
+            value: http://petdopt.local/users
+          ports:
+            - containerPort: 80

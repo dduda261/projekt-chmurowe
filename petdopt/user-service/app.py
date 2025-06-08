@@ -5,7 +5,7 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:8080"])
 users = {}
 
-@app.route("/register", methods=["POST"])
+@app.route("/users/register", methods=["POST"])
 def register():
     data = request.json
     username = data.get("username")
@@ -17,7 +17,7 @@ def register():
     users[username] = password
     return jsonify({"message": "User registered"}), 201
 
-@app.route("/login", methods=["POST"])
+@app.route("/users/login", methods=["POST"])
 def login():
     data = request.json
     username = data.get("username")

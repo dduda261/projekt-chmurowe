@@ -32,30 +32,6 @@ services:
     networks:
       - petdopt_net
 
-  match-service:
-    build: ./match-service
-    ports:
-      - "5003:5000"
-    networks:
-      - petdopt_net
-
-  analytics-service:
-    build: ./analytics-service
-    networks:
-      - petdopt_net
-    depends_on:
-      - rabbitmq
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - petdopt_net
-
   db:
     image: postgres:15
     restart: unless-stopped

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: petdopt-config
+data:
+  DB_HOST: db-service
+  DB_PORT: "5432"
+  DB_NAME: petdopt
+  DB_USER: postgres

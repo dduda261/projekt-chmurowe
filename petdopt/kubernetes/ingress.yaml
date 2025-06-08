@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: petdopt-ingress
+  annotations: {}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: petdopt.local
+    http:
+      paths:
+      - path: /pets
+        pathType: Prefix
+        backend:
+          service:
+            name: pet-service
+            port:
+              number: 5001
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 5002
+      - path: /uploads
+        pathType: Prefix
+        backend:
+          service:
+            name: pet-service
+            port:
+              number: 5001
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80

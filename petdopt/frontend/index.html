@@ -64,9 +64,8 @@
   <script>
     let loggedUser = null;
 
-    const petAPI = 'http://localhost:5001/pets';
-    const userAPI = 'http://localhost:5002';
-    const matchAPI = 'http://localhost:5003/match';
+    const petAPI = '__PET_API__';
+    const userAPI = '__USER_API__';
 
     const dropArea = document.getElementById('drop-area');
     const imageInput = document.getElementById('image-file');
@@ -99,18 +98,12 @@
           ${pet.image_url ? `<img src="${pet.image_url}" alt="${pet.name}" width="150">` : ''}
         `;
 
-        if (loggedUser) {
-          const matchBtn = document.createElement('button');
-          matchBtn.textContent = "Zgłoś adopcję";
-          matchBtn.onclick = () => submitMatch(pet.name);
-          li.appendChild(matchBtn);
 
-          if (loggedUser && loggedUser === pet.username) {
-            const delBtn = document.createElement('button');
-            delBtn.textContent = "Usuń ogłoszenie";
-            delBtn.onclick = () => deletePet(pet.id);
-            li.appendChild(delBtn);
-          }
+        if (loggedUser && loggedUser === pet.username) {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = "Usuń ogłoszenie";
+          delBtn.onclick = () => deletePet(pet.id);
+          li.appendChild(delBtn);
         }
 
         list.appendChild(li);
@@ -119,7 +112,7 @@
 
     async function deletePet(petId) {
       try {
-        const res = await fetch(`http://localhost:5001/pets/${petId}`, {
+        const res = await fetch(`${petAPI}/${petId}`, {
           method: "DELETE",
           headers: {
             "X-User": loggedUser  
@@ -134,19 +127,6 @@
         }
       } catch (err) {
         alert("Błąd sieci: " + err.message);
-      }
-    }
-
-    async function submitMatch(petName) {
-      const res = await fetch(matchAPI, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pet_name: petName, username: loggedUser })
-      });
-      if (res.ok) {
-        alert("Zgłoszenie wysłane!");
-      } else {
-        alert("Błąd zgłoszenia.");
       }
     }
 
@@ -204,7 +184,7 @@
       formData.append("username", loggedUser);
       formData.append("image", document.getElementById('image-file').files[0]);
 
-      const res = await fetch("http://localhost:5001/pets", {
+      const res = await fetch(petAPI, {
         method: "POST",
         body: formData
       });

@@ -9,6 +9,7 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:8080"])
 app.config["UPLOAD_FOLDER"] = "uploads"
 
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:5001")
 
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
@@ -49,7 +50,7 @@ def list_pets():
             "location": pet.location,
             "description": pet.description,
             "username": pet.username,
-            "image_url": f"http://localhost:5001/uploads/{pet.image_filename}"
+            "image_url": f"{BASE_URL}/uploads/{pet.image_filename}"
         } for pet in pets
     ])
 
