@@ -31,7 +31,7 @@ class Pet(db.Model):
     name = db.Column(db.String(80))
     species = db.Column(db.String(30))
     gender = db.Column(db.String(20))
-    age = db.Column(db.Integer)
+    age = db.Column(db.String(20))
     location = db.Column(db.String(120))
     description = db.Column(db.Text)
     username = db.Column(db.String(80), nullable=False)
@@ -107,7 +107,7 @@ with app.app_context():
 
 if __name__ == "__main__":
     with app.app_context():
-        db.drop_all()
+        # db.drop_all()
         db.create_all()
     app.run(host="0.0.0.0", port=5000)
 

@@ -1,12 +1,17 @@
 services:
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        PET_API: "http://localhost:5001/pets"
+        USER_API: "http://localhost:5002/users"
     ports:
       - "8080:80"
     networks:
       - petdopt_net
     depends_on:
       - pet-service
+      - user-service
 
   pet-service:
     build: ./pet-service
@@ -29,8 +34,15 @@ services:
     build: ./user-service
     ports:
       - "5002:5000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=petdopt
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
     networks:
       - petdopt_net
+
 
   db:
     image: postgres:15

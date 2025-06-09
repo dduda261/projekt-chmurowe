@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>PetDopt – Logowanie / Rejestracja</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 0 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #007acc;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+      margin-bottom: 30px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+    nav a {
+      color: #007acc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>PetDopt</h1>
+
+  <section>
+    <h2>Logowanie</h2>
+    <form id="login-form">
+      <input type="text" id="login-username" placeholder="Nazwa użytkownika" required />
+      <input type="password" id="login-password" placeholder="Hasło" required />
+      <button type="submit">Zaloguj</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Rejestracja</h2>
+    <form id="register-form">
+      <input type="text" id="reg-username" placeholder="Nazwa użytkownika" required />
+      <input type="password" id="reg-password" placeholder="Hasło" required />
+      <button type="submit">Zarejestruj</button>
+    </form>
+  </section>
+
+  <nav>
+    <a href="/">Strona główna</a>
+  </nav>
+
+<script>
+  const isLocal = window.location.hostname === 'localhost';
+  const userAPI = isLocal ? 'http://localhost:5002/users' : '__USER_API__';
+
+  function setLoggedUser(username) {
+    localStorage.setItem('loggedUser', username);
+    window.location.href = '/';  
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    try {
+      const res = await fetch(`${userAPI}/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})
+      });
+      if (res.ok) {
+        setLoggedUser(username);
+      } else {
+        alert('Błąd logowania');
+      }
+    } catch (err) {
+      alert('Błąd sieci: ' + err.message);
+    }
+  });
+
+  document.getElementById('register-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const username = document.getElementById('reg-username').value;
+    const password = document.getElementById('reg-password').value;
+    try {
+      const res = await fetch(`${userAPI}/register`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})
+      });
+      if (res.ok) {
+        alert('Rejestracja udana! Możesz się teraz zalogować.');
+      } else {
+        alert('Błąd rejestracji');
+      }
+    } catch (err) {
+      alert('Błąd sieci: ' + err.message);
+    }
+  });
+</script>
+</body>
+</html>

@@ -17,3 +17,23 @@ spec:
           image: dduda261/user-service:latest
           ports:
             - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "500m"
+          env:
+            - name: BASE_URL
+              value: "http://petdopt.local"
+          envFrom:
+            - configMapRef:
+                name: petdopt-config
+            - secretRef:
+                name: petdopt-secret
+          volumeMounts:
+            - mountPath: /uploads
+              name: user-uploads
+      volumes:
+        - name: user-uploads
+          persistentVolumeClaim:
+            claimName: user-uploads
