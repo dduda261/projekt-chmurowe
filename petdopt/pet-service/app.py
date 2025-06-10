@@ -71,7 +71,7 @@ def add_pet():
         name=name,
         species=species,
         gender=gender,
-        age=int(age),
+        age=age,
         location=location,
         description=description,
         username=username,
@@ -107,7 +107,6 @@ with app.app_context():
 
 if __name__ == "__main__":
     with app.app_context():
-        # db.drop_all()
         db.create_all()
     app.run(host="0.0.0.0", port=5000)
 

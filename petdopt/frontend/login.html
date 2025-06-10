@@ -3,61 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <title>PetDopt – Logowanie / Rejestracja</title>
+
   <style>
+    :root {
+      --color-primary: #c7b198;
+      --color-primary-hover: #ac977e;
+      --color-background: #f9f9f9;
+      --color-text: #333;
+      --color-form-background: white;
+      --color-border: #ccc;
+    }
+
     body {
       font-family: Arial, sans-serif;
       max-width: 400px;
       margin: 50px auto;
       padding: 0 20px;
-      background: #f9f9f9;
-      color: #333;
+      background: var(--color-background);
+      color: var(--color-text);
     }
+
     h1, h2 {
       text-align: center;
-      color: #007acc;
+      color: var(--color-primary);
     }
+
     form {
-      background: white;
+      background: var(--color-form-background);
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
       margin-bottom: 30px;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
       border-radius: 5px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--color-border);
       font-size: 1em;
       box-sizing: border-box;
     }
+
     button {
-      background-color: #007acc;
+      background-color: var(--color-primary);
       color: white;
       border: none;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+
     button:hover {
-      background-color: #005fa3;
+      background-color: var(--color-primary-hover);
     }
+
     nav {
       text-align: center;
       margin-top: 20px;
     }
+
     nav a {
-      color: #007acc;
+      color: var(--color-primary);
       text-decoration: none;
       font-weight: bold;
     }
+
     nav a:hover {
       text-decoration: underline;
     }
   </style>
+
 </head>
 <body>
-  <h1>PetDopt</h1>
+  <nav>
+    <a href="/">Powrót do strony głównej</a>
+  </nav>
 
   <section>
     <h2>Logowanie</h2>
@@ -77,9 +98,7 @@
     </form>
   </section>
 
-  <nav>
-    <a href="/">Strona główna</a>
-  </nav>
+
 
 <script>
   const isLocal = window.location.hostname === 'localhost';
