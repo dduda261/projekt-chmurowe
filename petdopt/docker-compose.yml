@@ -20,7 +20,14 @@ services:
 
 
   pet-service:
-    build: ./pet-service
+    build: 
+      context: ./pet-service
+      args:
+          DB_HOST: db
+          DB_PORT: 5432
+          DB_NAME: petdopt
+          DB_USER: postgres
+          DB_PASSWORD: postgres
     ports:
       - "5001:5000"
     networks:
@@ -42,7 +49,14 @@ services:
       - pet_uploads:/app/uploads
 
   user-service:
-    build: ./user-service
+    build: 
+      context: ./user-service
+      args:
+          DB_HOST: db
+          DB_PORT: 5432
+          DB_NAME: petdopt
+          DB_USER: postgres
+          DB_PASSWORD: postgres
     ports:
       - "5002:5000"
     networks:
