@@ -102,6 +102,10 @@ def delete_pet(pet_id):
 def get_image(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'}), 200
+
 with app.app_context():
     db.create_all()
 

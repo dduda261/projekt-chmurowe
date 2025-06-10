@@ -57,6 +57,10 @@ def login():
 
     return jsonify({"error": "Invalid credentials"}), 401
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'}), 200
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()  

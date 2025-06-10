@@ -12,6 +12,12 @@ services:
     depends_on:
       - pet-service
       - user-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 
   pet-service:
     build: ./pet-service
@@ -21,6 +27,11 @@ services:
       - petdopt_net
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -34,19 +45,30 @@ services:
     build: ./user-service
     ports:
       - "5002:5000"
+    networks:
+      - petdopt_net
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     environment:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=petdopt
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-    networks:
-      - petdopt_net
-
 
   db:
     image: postgres:15
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     environment:
       POSTGRES_DB: petdopt
       POSTGRES_USER: postgres
