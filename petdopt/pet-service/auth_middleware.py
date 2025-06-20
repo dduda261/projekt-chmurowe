@@ -7,7 +7,7 @@ KEYCLOAK_REALM = "petdopt"
 KEYCLOAK_URL = f"http://localhost:8081/realms/{KEYCLOAK_REALM}"
 JWKS_URL = f"{KEYCLOAK_URL}/protocol/openid-connect/certs"
 ISSUER = KEYCLOAK_URL
-AUDIENCE = ["petdopt-api"]
+AUDIENCE = ["petdopt-frontend"]
 
 jwks_client = PyJWKClient(JWKS_URL)
 

@@ -1,4 +1,5 @@
 import os
+import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -111,6 +112,36 @@ def get_image(filename):
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'}), 200
+
+
+KEYCLOAK_URL = 'http://localhost:8081/auth/admin/realms/petdopt/users'
+TOKEN_URL = 'http://localhost:8081/auth/realms/petdopt/protocol/openid-connect/token'
+
+CLIENT_ID = 'petdopt-admin-cli'
+CLIENT_SECRET = 'super-admin-secret'
+
+def get_admin_access_token():
+    data = {
+        'grant_type': 'client_credentials',
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET
+    }
+    r = requests.post(TOKEN_URL, data=data)
+    r.raise_for_status()
+    return r.json()['access_token']
+
+@app.route('/admin/users', methods=['GET'])
+@requires_auth(allowed_roles=["admin"])
+def get_users():
+    try:
+        token = get_admin_access_token()
+        headers = {'Authorization': f'Bearer {token}'}
+        r = requests.get(KEYCLOAK_URL, headers=headers)
+        r.raise_for_status()
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 with app.app_context():
     db.create_all()
