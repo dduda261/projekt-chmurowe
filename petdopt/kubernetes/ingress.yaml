@@ -37,3 +37,16 @@ spec:
             name: frontend
             port:
               number: 80
+
+  - host: keycloak.petdopt.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak
+            port:
+              number: 80
+
+#C3NUXNsHZ80f0Tji6dsqAbykSZVeEW0e

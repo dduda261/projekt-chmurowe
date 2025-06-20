@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from auth_middleware import requires_auth
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:8080"])
@@ -56,6 +57,16 @@ def login():
         return jsonify({"message": "Login successful"}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
+
+@app.route("/users/me", methods=["GET"])
+@requires_auth(allowed_roles=["user", "admin"])
+def get_my_profile():
+    username = request.user.get("preferred_username")
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"username": user.username}), 200
+
 
 @app.route('/health', methods=['GET'])
 def health():

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>PetDopt - Logowanie</title>
+</head>
+<body>
+  <p>Przetwarzanie logowania...</p>
+<script>
+   console.log("Callback uruchomiony");
+  (async () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const code_verifier = sessionStorage.getItem('code_verifier');
+
+    if (!code) {
+      alert('Brak kodu autoryzacji');
+      window.location.href = '/';
+      return;
+    }
+
+    if (!code_verifier) {
+      alert('Brak code_verifier');
+      window.location.href = '/';
+      return;
+    }
+
+    try {
+      const tokenRes = await fetch('http://localhost:8081/realms/petdopt/protocol/openid-connect/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: 'petdopt-frontend',
+          code,
+          redirect_uri: window.location.origin + '/callback.html',
+          code_verifier
+        })
+      });
+
+      if (!tokenRes.ok) {
+        throw new Error('Błąd pobierania tokena');
+      }
+
+      const tokenData = await tokenRes.json();
+      sessionStorage.setItem('access_token', tokenData.access_token);
+      sessionStorage.removeItem('code_verifier');
+      window.location.href = '/';
+    } catch (e) {
+      alert('Błąd podczas logowania: ' + e.message);
+      window.location.href = '/';
+    }
+  })();
+</script>
+</body>
+</html>

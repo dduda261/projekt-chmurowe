@@ -3,7 +3,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-
+from auth_middleware import requires_auth
+import uuid
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:8080"])
@@ -53,45 +54,50 @@ def list_pets():
             "image_url": f"{BASE_URL}/uploads/{pet.image_filename}"
         } for pet in pets
     ])
+import uuid
 
 @app.route("/pets", methods=["POST"])
+@requires_auth(allowed_roles=["user", "admin"])
 def add_pet():
-    name = request.form["name"]
-    species = request.form["species"]
-    gender = request.form["gender"]
-    age = request.form["age"]
-    location = request.form["location"]
-    description = request.form["description"]
-    username = request.form['username'] 
+    if "image" not in request.files:
+        return jsonify({"error": "Brak pliku ze zdjęciem"}), 400
+    
     image = request.files["image"]
     filename = secure_filename(image.filename)
-    image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    image.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
 
     pet = Pet(
-        name=name,
-        species=species,
-        gender=gender,
-        age=age,
-        location=location,
-        description=description,
-        username=username,
-        image_filename=filename
+        name=request.form["name"],
+        species=request.form["species"],
+        gender=request.form["gender"],
+        age=request.form["age"],
+        location=request.form["location"],
+        description=request.form["description"],
+        username=request.form['username'],
+        image_filename=unique_filename
     )
     db.session.add(pet)
     db.session.commit()
     return jsonify({"status": "ok"}), 201
 
+
 @app.route('/pets/<int:pet_id>', methods=['DELETE'])
+@requires_auth(allowed_roles=["user", "admin"])
 def delete_pet(pet_id):
     pet = Pet.query.get(pet_id)
     if not pet:
         return jsonify({"error": "Nie znaleziono zwierzaka"}), 404
     
-    requesting_user = request.headers.get('X-User') or request.args.get('username')
+    requesting_user = request.user.get("preferred_username")
+
     if not requesting_user:
         return jsonify({"error": "Brak informacji o użytkowniku"}), 400
     
-    if pet.username != requesting_user:
+    user_roles = request.user.get("realm_access", {}).get("roles", [])
+    is_admin = "admin" in user_roles
+
+    if pet.username != requesting_user and not is_admin:
         return jsonify({"error": "Brak uprawnień do usunięcia tego ogłoszenia"}), 403
 
     db.session.delete(pet)

@@ -3,8 +3,8 @@ services:
     build: 
       context: ./frontend
       args:
-        PET_API: "http://localhost:5001/pets"
-        USER_API: "http://localhost:5002/users"
+          PET_API: "http://pet-service:5000/pets"
+          USER_API: "http://user-service:5000/users"
     ports:
       - "8080:80"
     networks:
@@ -91,6 +91,23 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - petdopt_net
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/opt/keycloak/data/import/realm-export.json
+    volumes:
+      - ./keycloak-config/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8081:8080"
+    networks:
+      - petdopt_net
+    restart: unless-stopped
+
 
 networks:
   petdopt_net:
